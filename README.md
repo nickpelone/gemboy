@@ -2,6 +2,8 @@
 
 Implements a Nintendo Gameboy emulator in Ruby. Very much WIP. Starting with parsing cart dumps and moving to a CPU emulator and debugger.
 
+I've always wanted to write an emulator and I figured another "simple" somewhere in the same ballpark as optcarrt would be interesting to measure under Ruby's new incoming JIT.
+
 ### This project does not redistribute ROMs.
 
 ## Installation

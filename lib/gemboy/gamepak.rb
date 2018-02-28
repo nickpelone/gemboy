@@ -5,9 +5,15 @@ module Gemboy
 
     def initialize(path)
       # TODO all the fancy File.whatever methods to do relative paths and things
-      @rom = File.read(path, mode: 'rb')
+      @rom_path = path
+      @rom = File.read(@rom_path, mode: 'rb')
 
       parse_header
+    end
+
+    # Prevent printing the whole dang ROM to stdout during irb sessions
+    def inspect
+      "#<#{self.class.name} ROM: #{@rom_path}>"
     end
 
     private

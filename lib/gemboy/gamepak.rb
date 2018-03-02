@@ -4,6 +4,9 @@ module Gemboy
     HEADER_START = 0x100
     HEADER_END = 0x014F
 
+    CHKSUM_HEADER_START = 0x134
+    CHKSUM_HEADER_END = 0x14C
+
     TITLE_START = 0x134
     OLD_TITLE_END = 0x143
     NEW_TITLE_END = 0x13E
@@ -57,7 +60,7 @@ module Gemboy
 
       # TODO Translate Licensee code(s) to names
       if @rom[NEW_LICENSEE_ENABLE_FIELD].bytes.first == NEW_LICENSEE_ON
-        @header[:licensee] = @rom[NEW_LICENSEE_STR_BEGIN..NEW_LICENSEE_STR_END].bytes
+        @header[:licensee] = @rom[NEW_LICENSEE_STR_BEGIN..NEW_LICENSEE_STR_END].bytes.map(&:chr).join.to_i(16)
         @header[:title] = @rom[TITLE_START..NEW_TITLE_END].bytes.reject{|b| b == 0}.map(&:chr).join
       else
         # Pull from old licensee field
@@ -66,23 +69,30 @@ module Gemboy
       end
 
       if @rom[SGB_SUPPORT_FIELD].bytes.first == SGB_SUPPORT_ON
-       @header[:sgb] = true
+       @header[:sgb_support] = true
       else
-       @header[:sgb] = false
+       @header[:sgb_support] = false
       end
 
-      # TODO detect gameboy color stuff
+      # Platform detection
+      if @rom[CGB_SUPPORT_FIELD].bytes.first == CGB_SUPPORTED || @rom[CGB_SUPPORT_FIELD].bytes.first == CGB_ONLY
+        @header[:platform] = "Game Boy Color"
+      elsif @rom[SGB_SUPPORT_FIELD].bytes.first == SGB_SUPPORT_ON
+        @header[:platform] = "Super Game Boy"
+      else
+        @header[:platform] = "Game Boy"
+      end
 
       @header[:cart_type] = @rom[CART_TYPE_FIELD].bytes.first
       @header[:destination] = @rom[DESTINATION_CODE_FIELD].bytes.first
+      @header[:header_checksum] = checksum_header
 
-      # TODO Pull checksums
-      # Should these instead be part of the constructor? Debate is whether to put in @header
-      # a valid yes/no or throw execption when invalid
-      # ...
-      #
-      #check_header # calc and compare header checksum
-      #check_rom # calc and compare rom checksum
+      # TODO Pull global checksum
+    end
+
+    def checksum_header
+      header = @rom[CHKSUM_HEADER_START..CHKSUM_HEADER_END]
+      (0 - header.bytes.reduce(0){|memo, i| memo += i} - 25) & 255
     end
   end
 end

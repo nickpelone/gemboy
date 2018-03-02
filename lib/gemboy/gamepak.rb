@@ -8,6 +8,10 @@ module Gemboy
     OLD_TITLE_END = 0x143
     NEW_TITLE_END = 0x13E
 
+    CGB_SUPPORT_FIELD = 0x143 # On newer carts this is not in the title
+    CGB_SUPPORTED = 0x80
+    CGB_ONLY = 0xC0
+
     NEW_LICENSEE_ENABLE_FIELD = 0x14B
     NEW_LICENSEE_ON = 0x33
     NEW_LICENSEE_STR_BEGIN = 0x144
@@ -52,23 +56,25 @@ module Gemboy
       @header = Hash.new
 
       # TODO Translate Licensee code(s) to names
-      if @rom[NEW_LICENSEE_ENABLE_FIELD].unpack('C').first == NEW_LICENSEE_ON
+      if @rom[NEW_LICENSEE_ENABLE_FIELD].bytes.first == NEW_LICENSEE_ON
         @header[:licensee] = @rom[NEW_LICENSEE_STR_BEGIN..NEW_LICENSEE_STR_END].bytes
         @header[:title] = @rom[TITLE_START..NEW_TITLE_END].bytes.reject{|b| b == 0}.map(&:chr).join
       else
         # Pull from old licensee field
-        @header[:licensee] = @rom[OLD_LICENSEE_FIELD].unpack('C').first
         @header[:title] = @rom[TITLE_START..OLD_TITLE_END].bytes.reject{|b| b == 0}.map(&:chr).join
+        @header[:licensee] = @rom[OLD_LICENSEE_FIELD].bytes.first
       end
 
-      if @rom[SGB_SUPPORT_FIELD] == SGB_SUPPORT_ON
+      if @rom[SGB_SUPPORT_FIELD].bytes.first == SGB_SUPPORT_ON
        @header[:sgb] = true
       else
        @header[:sgb] = false
       end
 
-      @header[:cart_type] = @rom[CART_TYPE_FIELD].unpack('C').first
-      @header[:destination] = @rom[DESTINATION_CODE_FIELD].unpack('C').first
+      # TODO detect gameboy color stuff
+
+      @header[:cart_type] = @rom[CART_TYPE_FIELD].bytes.first
+      @header[:destination] = @rom[DESTINATION_CODE_FIELD].bytes.first
 
       # TODO Pull checksums
       # Should these instead be part of the constructor? Debate is whether to put in @header

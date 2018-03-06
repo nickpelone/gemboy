@@ -1,11 +1,15 @@
 # frozen-string-literal: true
 module Gemboy
+  
   class Gamepak
     HEADER_START = 0x100
     HEADER_END = 0x014F
 
     CHKSUM_HEADER_START = 0x134
     CHKSUM_HEADER_END = 0x14C
+    CHKSUM_HEADER_FIELD = 0x14D
+
+    CHKSUM_GLOBAL_START = 0x14E
 
     TITLE_START = 0x134
     OLD_TITLE_END = 0x143
@@ -85,14 +89,25 @@ module Gemboy
 
       @header[:cart_type] = @rom[CART_TYPE_FIELD].bytes.first
       @header[:destination] = @rom[DESTINATION_CODE_FIELD].bytes.first
-      @header[:header_checksum] = checksum_header
 
-      # TODO Pull global checksum
+      @header[:header_checksum] = checksum_header
+      @header[:header_valid] = (@header[:header_checksum] == @rom[CHKSUM_HEADER_FIELD].bytes.first)
+
+      @header[:global_checksum] = checksum_rom
+      @header[:rom_valid] = (@header[:global_checksum] == @rom.slice(CHKSUM_GLOBAL_START, 2).bytes)
     end
 
     def checksum_header
       header = @rom[CHKSUM_HEADER_START..CHKSUM_HEADER_END]
       (0 - header.bytes.reduce(0){|memo, i| memo += i} - 25) & 255
+    end
+
+    def checksum_rom
+      sum = 0
+      @rom.bytes.each_with_index do |b, i|
+        sum += b unless i == 0x14E || i == 0x14F
+      end
+      [sum].pack('n').bytes # Take the two lower bytes of the result
     end
   end
 end

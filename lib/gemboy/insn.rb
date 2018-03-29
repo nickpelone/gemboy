@@ -45,6 +45,15 @@ module Gemboy
       set_clocks
     end
 
+    # LD r1,r2
+    def ld_r1_r2(mtime, *params)
+      instance_variable_set(
+        params[0],
+        instance_vaiable_get(params[1])
+      )
+      set_clocks(mtime)
+    end
+
     private
     # Set the clock registers based on how much m-time
     # an instruction is meant to take.

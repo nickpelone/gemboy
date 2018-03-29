@@ -42,9 +42,16 @@ module Gemboy
     }
     # opcode 00
     def nop
-      # 1 M-time
-      @m = 1
-      @t = 4
+      set_clocks
+    end
+
+    private
+    # Set the clock registers based on how much m-time
+    # an instruction is meant to take.
+    def set_clocks(mtime=1)
+      @m = mtime
+      @t = 4*mtime
+      nil
     end
   end
 end

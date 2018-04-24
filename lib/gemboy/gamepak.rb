@@ -55,7 +55,19 @@ module Gemboy
 
     # Prevent printing the whole dang ROM to stdout during irb sessions
     def inspect
-      "#<#{self.class.name} ROM: #{@rom_path}>"
+      "#<#{self.class.name}:0x#{object_id.to_s(16)} Game: #{@header[:title]} Header: #{header_valid? ? 'OK' : 'INVALID'} ROM: #{rom_valid? ? 'OK' : 'INVALID'}>"
+    end
+
+    def valid?
+      header_valid? && rom_valid?
+    end
+
+    def header_valid?
+      @header[:header_valid]
+    end
+
+    def rom_valid?
+      @header[:rom_valid]
     end
 
     private

@@ -1,3 +1,7 @@
 #!/usr/bin/env ruby
 
-require "gemboy"
+require 'gemboy'
+
+ROM_PATH = ARGV[0]
+
+game = Gemboy::Gamepak.new(ROM_PATH)

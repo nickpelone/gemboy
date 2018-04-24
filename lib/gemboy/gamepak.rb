@@ -1,6 +1,7 @@
-# frozen-string-literal: true
+# frozen_string_literal: true
+
 module Gemboy
-  
+  # Represents a Gamepak for reading header and ROM data from.
   class Gamepak
     HEADER_START = 0x100
     HEADER_END = 0x014F
@@ -46,7 +47,7 @@ module Gemboy
     attr_reader :header
 
     def initialize(path)
-      # TODO all the fancy File.whatever methods to do relative paths and things
+      # TODO: all the fancy File.whatever methods to do relative paths and things
       @rom_path = path
       @rom = File.read(@rom_path, mode: 'rb')
 
@@ -71,33 +72,30 @@ module Gemboy
     end
 
     private
-    def parse_header
-      @header = Hash.new
 
-      # TODO Translate Licensee code(s) to names
+    def parse_header
+      @header = {}
+
+      # TODO: Translate Licensee code(s) to names
       if @rom[NEW_LICENSEE_ENABLE_FIELD].bytes.first == NEW_LICENSEE_ON
         @header[:licensee] = @rom[NEW_LICENSEE_STR_BEGIN..NEW_LICENSEE_STR_END].bytes.map(&:chr).join.to_i(16)
-        @header[:title] = @rom[TITLE_START..NEW_TITLE_END].bytes.reject{|b| b == 0}.map(&:chr).join
+        @header[:title] = @rom[TITLE_START..NEW_TITLE_END].bytes.reject(&:zero?).map(&:chr).join
       else
         # Pull from old licensee field
-        @header[:title] = @rom[TITLE_START..OLD_TITLE_END].bytes.reject{|b| b == 0}.map(&:chr).join
+        @header[:title] = @rom[TITLE_START..OLD_TITLE_END].bytes.reject(&:zero?).map(&:chr).join
         @header[:licensee] = @rom[OLD_LICENSEE_FIELD].bytes.first
       end
 
-      if @rom[SGB_SUPPORT_FIELD].bytes.first == SGB_SUPPORT_ON
-       @header[:sgb_support] = true
-      else
-       @header[:sgb_support] = false
-      end
+      @header[:sgb_support] = (@rom[SGB_SUPPORT_FIELD].bytes.first == SGB_SUPPORT_ON)
 
       # Platform detection
-      if @rom[CGB_SUPPORT_FIELD].bytes.first == CGB_SUPPORTED || @rom[CGB_SUPPORT_FIELD].bytes.first == CGB_ONLY
-        @header[:platform] = "Game Boy Color"
-      elsif @rom[SGB_SUPPORT_FIELD].bytes.first == SGB_SUPPORT_ON
-        @header[:platform] = "Super Game Boy"
-      else
-        @header[:platform] = "Game Boy"
-      end
+      @header[:platform] = if @rom[CGB_SUPPORT_FIELD].bytes.first == CGB_SUPPORTED || @rom[CGB_SUPPORT_FIELD].bytes.first == CGB_ONLY
+        'Game Boy Color' # rubocop:disable Layout/IndentationWidth
+      elsif @rom[SGB_SUPPORT_FIELD].bytes.first == SGB_SUPPORT_ON # rubocop:disable Layout/ElseAlignment
+        'Super Game Boy'
+      else # rubocop:disable Layout/ElseAlignment
+        'Game Boy'
+      end # rubocop:disable Layout/EndAlignment
 
       @header[:cart_type] = @rom[CART_TYPE_FIELD].bytes.first
       @header[:destination] = @rom[DESTINATION_CODE_FIELD].bytes.first
@@ -111,13 +109,13 @@ module Gemboy
 
     def checksum_header
       header = @rom[CHKSUM_HEADER_START..CHKSUM_HEADER_END]
-      (0 - header.bytes.reduce(0){|memo, i| memo += i} - 25) & 255
+      (0 - header.bytes.reduce(0) { |memo, i| memo + i } - 25) & 255
     end
 
     def checksum_rom
       sum = 0
       @rom.bytes.each_with_index do |b, i|
-        sum += b unless i == 0x14E || i == 0x14F
+        sum += b unless [0x14E, 0x14F].include? i
       end
       [sum].pack('n').bytes # Take the two lower bytes of the result
     end

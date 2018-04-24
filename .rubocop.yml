@@ -1,0 +1,34 @@
+AllCops:
+  TargetRubyVersion: 2.5
+Metrics/AbcSize:
+  Enabled: No
+Metrics/MethodLength:
+  Enabled: No
+Metrics/LineLength:
+  Enabled: No
+Metrics/ClassLength:
+  Enabled: No
+Lint/IneffectiveAccessModifier:
+  Enabled: No
+Lint/UselessAccessModifier:
+  Enabled: No
+Style/ClassVars:
+  Enabled: No
+Style/ClassAndModuleChildren:
+  Enabled: No
+Style/GuardClause:
+  Enabled: No
+Layout/TrailingBlankLines:
+  Enabled: No
+Style/SymbolArray:
+  Enabled: No
+Metrics/CyclomaticComplexity:
+  Enabled: No
+Metrics/PerceivedComplexity:
+  Enabled: No
+Metrics/BlockLength:
+  Enabled: No
+Layout/IndentArray:
+  Enabled: No
+Layout/FirstParameterIndentation:
+  Enabled: No
